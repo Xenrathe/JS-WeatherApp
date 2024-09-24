@@ -1,3 +1,66 @@
+@font-face {
+  font-family: GothicSketch;
+  src: url(Assets/SketchGothic.ttf);
+}
+
+body {
+  background-image: url(Assets/manuscriptBG.jpg);
+  background-size: cover;
+  width: 100vw;
+  height: 100vh;
+  padding: 0px;
+  margin: 0px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#logo {
+  width: max(400px, 40vw);
+}
+
+form {
+  font-family: GothicSketch, "Franklin Gothic Medium", "Arial Narrow", Arial,
+    sans-serif;
+  font-size: max(21px, calc(5px + 2vw));
+  color: rgb(23, 0, 34);
+
+  width: max(330px, 30vw);
+  border: double 9px RGB(118, 114, 87);
+  background-color: RGB(240, 223, 193);
+  background: solid;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+form label {
+  text-align: center;
+}
+
+form .inputs {
+  display: flex;
+  padding: 5px;
+  height: 70%;
+  min-width: max(200px, 15vw);
+}
+
+form .inputs input {
+  font-size: 15px;
+  min-width: max(100px, 10vw);
+}
+
 .content div {
   display: none;
 }
