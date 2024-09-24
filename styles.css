@@ -1,0 +1,20 @@
+.content div {
+  display: none;
+}
+.content div.active {
+  display: block;
+}
+.navbar {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+.navbar button {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+.navbar button.active {
+  background-color: #ccc;
+}

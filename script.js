@@ -10,7 +10,11 @@ class WeatherPeriod {
     this.temp = temp;
     this.feelsLikeTemp = feelsLikeTemp;
     this.humidity = humidity;
-    this.precipType = precipType;
+    if (Array.isArray(precipType)) {
+      this.precipType = precipType[0];
+    } else {
+      this.precipType = null;
+    }
     this.precipChance = precipChance;
     this.dateTime = dateTime;
   }
@@ -25,7 +29,6 @@ async function fetchDataForLocation(location) {
   const locData = await response.json();
 
   const processedData = processWeatherData(locData);
-  console.log(processedData);
   return processedData;
 }
 
@@ -38,39 +41,39 @@ function processWeatherData(JSONData) {
   let processedData = { currentConditions: {}, hourly: [], daily: [] };
 
   //Get current conditions
-  processedData.currentConditions = {
-    temp: JSONData.currentConditions.temp,
-    humidity: JSONData.currentConditions.humidity,
-    feelsLike: JSONData.currentConditions.feelslike,
-    precipType: JSONData.currentConditions.preciptype,
-    precipProb: JSONData.currentConditions.precipprob,
-    dateTime: "current",
-  };
+  processedData.currentConditions = new WeatherPeriod(
+    JSONData.currentConditions.temp,
+    JSONData.currentConditions.humidity,
+    JSONData.currentConditions.feelslike,
+    JSONData.currentConditions.preciptype,
+    JSONData.currentConditions.precipprob,
+    "current"
+  );
 
   //Get hourly for current day
   JSONData.days[0].hours.forEach((hour) => {
-    const filteredHour = {
-      temp: hour.temp,
-      feelsLike: hour.feelslike,
-      humidity: hour.humidity,
-      precipType: hour.preciptype,
-      precipProb: hour.precipprob,
-      dateTime: hour.datetime,
-    };
+    const filteredHour = new WeatherPeriod(
+      hour.temp,
+      hour.feelslike,
+      hour.humidity,
+      hour.preciptype,
+      hour.precipprob,
+      hour.datetime
+    );
 
     processedData.hourly.push(filteredHour);
   });
 
   //Get next 7 days, including today
   for (day = 0; day < 7; day++) {
-    const filteredDay = {
-      temp: JSONData.days[day].temp,
-      feelsLike: JSONData.days[day].feelslike,
-      humidity: JSONData.days[day].humidity,
-      precipType: JSONData.days[day].preciptype,
-      precipprob: JSONData.days[day].precipprob,
-      dateTime: JSONData.days[day].datetime,
-    };
+    const filteredDay = new WeatherPeriod(
+      JSONData.days[day].temp,
+      JSONData.days[day].feelslike,
+      JSONData.days[day].humidity,
+      JSONData.days[day].preciptype,
+      JSONData.days[day].precipprob,
+      JSONData.days[day].datetime
+    );
 
     processedData.daily.push(filteredDay);
   }
@@ -90,4 +93,64 @@ async function getGIFs(searchString) {
   return gifData;
 }
 
-fetchDataForLocation("charlotte");
+const currentTab = document.getElementById("current-tab");
+const hourlyTab = document.getElementById("hourly-tab");
+const weeklyTab = document.getElementById("weekly-tab");
+const currentContent = document.getElementById("current");
+const hourlyContent = document.getElementById("hourly");
+const weeklyContent = document.getElementById("weekly");
+
+function showTab(tab) {
+  currentContent.classList.remove("active");
+  hourlyContent.classList.remove("active");
+  weeklyContent.classList.remove("active");
+  currentTab.classList.remove("active");
+  hourlyTab.classList.remove("active");
+  weeklyTab.classList.remove("active");
+
+  if (tab === "current") {
+    currentContent.classList.add("active");
+    currentTab.classList.add("active");
+  } else if (tab === "hourly") {
+    hourlyContent.classList.add("active");
+    hourlyTab.classList.add("active");
+  } else if (tab === "weekly") {
+    weeklyContent.classList.add("active");
+    weeklyTab.classList.add("active");
+  }
+}
+
+function submitSearch(event) {
+  const textField = document.getElementById("location-input");
+  const inputString = textField.value.trim();
+  if (inputString == "") {
+    return;
+  }
+
+  const processedWeatherData = fetchDataForLocation(inputString);
+  console.log(processedWeatherData);
+  event.preventDefault();
+}
+
+// called exactly once - adds event listeners
+function initialize() {
+  const searchBtn = document.querySelector("#location-form button");
+
+  searchBtn.addEventListener("click", (event) => {
+    submitSearch(event);
+  });
+
+  currentTab.addEventListener("click", () => {
+    showTab("current");
+  });
+
+  hourlyTab.addEventListener("click", () => {
+    showTab("hourly");
+  });
+
+  weeklyTab.addEventListener("click", () => {
+    showTab("weekly");
+  });
+}
+
+initialize();
