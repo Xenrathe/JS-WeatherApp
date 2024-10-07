@@ -3,11 +3,18 @@
   src: url(Assets/SketchGothic.ttf);
 }
 
+:root {
+  --border-color: RGB(118, 114, 87);
+  --parchment-BG: RGB(240, 223, 193);
+}
+
 body {
   background-image: url(Assets/manuscriptBG.jpg);
   background-size: cover;
   width: 100vw;
   height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   padding: 0px;
   margin: 0px;
 
@@ -25,6 +32,7 @@ body {
 
 #logo {
   width: max(400px, 40vw);
+  max-height: 25vh;
 }
 
 form {
@@ -34,9 +42,8 @@ form {
   color: rgb(23, 0, 34);
 
   width: max(330px, 30vw);
-  border: double 9px RGB(118, 114, 87);
-  background-color: RGB(240, 223, 193);
-  background: solid;
+  border: double 9px var(--border-color);
+  background-color: var(--parchment-BG);
 
   display: flex;
   flex-direction: row;
@@ -61,23 +68,136 @@ form .inputs input {
   min-width: max(100px, 10vw);
 }
 
-.content div {
-  display: none;
+.content-container {
+  width: max(330px, 30vw);
 }
-.content div.active {
-  display: block;
-}
+
 .navbar {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 5px;
   margin-bottom: 20px;
 }
+
 .navbar button {
   padding: 10px 20px;
   cursor: pointer;
   background-color: #f0f0f0;
   border: 1px solid #ccc;
 }
+
 .navbar button.active {
   background-color: #ccc;
+}
+
+.content {
+  display: flex;
+  justify-content: center;
+}
+
+.content .tab {
+  display: none;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+@media screen and (min-width: 1760px) {
+  #hourly,
+  #weekly {
+    min-width: 1756px;
+  }
+}
+
+@media screen and (min-width: 1325px) and (max-width: 1759px) {
+  #hourly,
+  #weekly {
+    min-width: 1322px;
+  }
+}
+
+@media screen and (min-width: 890px) and (max-width: 1324px) {
+  #hourly,
+  #weekly {
+    min-width: 888px;
+  }
+}
+
+@media screen and (max-width: 889px) {
+  #hourly,
+  #weekly {
+    min-width: 454px;
+  }
+}
+
+.content .tab.active {
+  display: flex;
+}
+
+.content .tab .weather-entry {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--parchment-BG);
+  width: 412px;
+}
+
+.weather-icon img {
+  height: 125px;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  gap: 10px;
+  padding: 0px 15px 0px 5px;
+  flex: 1;
+}
+
+.primary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.summary {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.temperature {
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.additional-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.precipitation-type,
+.precipitation-chance,
+.humidity {
+  font-size: 13px;
+  color: #555;
+}
+
+.date-time {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 20px;
+  font-weight: bold;
 }

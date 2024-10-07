@@ -5,6 +5,7 @@ class WeatherPeriod {
     humidity,
     precipType,
     precipChance,
+    icon,
     dateTime
   ) {
     this.temp = temp;
@@ -16,6 +17,7 @@ class WeatherPeriod {
       this.precipType = null;
     }
     this.precipChance = precipChance;
+    this.icon = icon;
     this.dateTime = dateTime;
   }
 }
@@ -24,7 +26,7 @@ class WeatherPeriod {
 async function fetchDataForLocation(location) {
   const encodedLocation = encodeURIComponent(location);
   const APIKey = "7PPG972PE46VHJ8E93N7NMFJ9";
-  const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodedLocation}?unitGroup=us&key=${APIKey}&contentType=json`;
+  const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodedLocation}?unitGroup=us&key=${APIKey}&contentType=json&iconSet=icons2`;
   const response = await fetch(url, { mode: "cors" });
   const locData = await response.json();
 
@@ -39,7 +41,6 @@ async function fetchDataForLocation(location) {
 // processedData.daily (array of size 7)
 function processWeatherData(JSONData) {
   let processedData = { currentConditions: {}, hourly: [], daily: [] };
-
   //Get current conditions
   processedData.currentConditions = new WeatherPeriod(
     JSONData.currentConditions.temp,
@@ -47,7 +48,8 @@ function processWeatherData(JSONData) {
     JSONData.currentConditions.feelslike,
     JSONData.currentConditions.preciptype,
     JSONData.currentConditions.precipprob,
-    "current"
+    JSONData.currentConditions.icon,
+    "Current"
   );
 
   //Get hourly for current day
@@ -58,7 +60,8 @@ function processWeatherData(JSONData) {
       hour.humidity,
       hour.preciptype,
       hour.precipprob,
-      hour.datetime
+      hour.icon,
+      convertHourlyTo12HourFormat(hour.datetime)
     );
 
     processedData.hourly.push(filteredHour);
@@ -72,7 +75,8 @@ function processWeatherData(JSONData) {
       JSONData.days[day].humidity,
       JSONData.days[day].preciptype,
       JSONData.days[day].precipprob,
-      JSONData.days[day].datetime
+      JSONData.days[day].icon,
+      convertDailyToDayOfWeekFormat(JSONData.days[day].datetime)
     );
 
     processedData.daily.push(filteredDay);
@@ -81,16 +85,45 @@ function processWeatherData(JSONData) {
   return processedData;
 }
 
-// Make an API call to giphy, to get an animated gif for searchString
-async function getGIFs(searchString) {
-  const encodedSearchString = encodeURIComponent(searchString);
-  const APIKey = "M1MWiTS051NXTyIRhtHJx7LnevUUfAVK";
-  const url = `https://api.giphy.com/v1/gifs/translate?api_key=${APIKey}&s=${encodedSearchString}`;
-  const response = await fetch(url, { mode: "cors" });
-  const gifData = await response.json();
+async function submitSearch(event) {
+  const textField = document.getElementById("location-input");
+  const inputString = textField.value.trim();
+  if (inputString == "") {
+    return;
+  }
 
-  console.log(gifData);
-  return gifData;
+  event.preventDefault();
+  try {
+    const processedWeatherData = await fetchDataForLocation(inputString);
+    console.log(processedWeatherData.currentConditions);
+    clearDOMContent();
+    createDOMCurrent(processedWeatherData.currentConditions);
+    createDOMHourly(processedWeatherData.hourly);
+    createDOMDaily(processedWeatherData.daily);
+  } catch (error) {
+    console.error("Error fetching weather data:", error);
+  }
+}
+
+//Assuming input of the form "hh:mm:ss"
+function convertHourlyTo12HourFormat(timeString) {
+  const [hours, minutes, seconds] = timeString.split(":");
+  let hour = parseInt(hours);
+  const amOrPm = hour >= 12 ? "pm" : "am";
+  hour = hour % 12 || 12;
+
+  // Return the time in "12 am" or "4 pm" format
+  return `${hour} ${amOrPm}`;
+}
+
+//Assuming input of the form "yyyy-mm-dd"
+function convertDailyToDayOfWeekFormat(dateString) {
+  const localDate = new Date(dateString);
+
+  return localDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    timeZone: "UTC",
+  }); // "Mon", "Tue", etc.
 }
 
 const currentTab = document.getElementById("current-tab");
@@ -120,16 +153,78 @@ function showTab(tab) {
   }
 }
 
-function submitSearch(event) {
-  const textField = document.getElementById("location-input");
-  const inputString = textField.value.trim();
-  if (inputString == "") {
-    return;
+function clearDOMContent() {
+  currentContent.innerHTML = "";
+  hourlyContent.innerHTML = "";
+  weeklyContent.innerHTML = "";
+}
+
+function createDOMWeatherEntry(weatherPeriod, containerDiv) {
+  // https://www.visualcrossing.com/resources/documentation/weather-api/defining-icon-set-in-the-weather-api/
+  let summary = "Cloudy";
+  if (
+    weatherPeriod.icon == "thunder-rain" ||
+    weatherPeriod.icon == "thunder-showers-day" ||
+    weatherPeriod.icon == "thunder-shows-night"
+  ) {
+    summary = "Thunderstorms";
+  } else if (
+    weatherPeriod.icon == "snow" ||
+    weatherPeriod.icon == "snow-showers-day" ||
+    weatherPeriod.icon == "snow-showers-night"
+  ) {
+    summary = "Snow";
+  } else if (
+    weatherPeriod.icon == "rain" ||
+    weatherPeriod.icon == "showers-day" ||
+    weatherPeriod.icon == "showers-night"
+  ) {
+    summary = "Rain";
+  } else if (
+    weatherPeriod.icon == "clear-day" ||
+    weatherPeriod.icon == "clear-night"
+  ) {
+    summary = "Sunny";
   }
 
-  const processedWeatherData = fetchDataForLocation(inputString);
-  console.log(processedWeatherData);
-  event.preventDefault();
+  const precipType =
+    weatherPeriod.precipType == null ? "None" : weatherPeriod.precipType;
+  const newWeatherEntryDiv = document.createElement("div");
+  newWeatherEntryDiv.classList.add("weather-entry");
+  newWeatherEntryDiv.innerHTML = `
+            <div class="weather-icon">
+              <img src="Assets/${summary}Icon.png" alt="Sun Icon" />
+            </div>
+            <div class="weather-info">
+              <div class="primary-info">
+                <div class="summary">${summary}</div>              
+                <div class="temperature">${weatherPeriod.temp}°F</div>
+              </div>
+              <div class="additional-info">
+                <div class="precipitation-type">Precipitation: ${precipType}</div>
+                <div class="precipitation-chance">Chance: ${weatherPeriod.precipChance}%</div>
+                <div class="humidity">Humidity: ${weatherPeriod.humidity}%</div>
+              </div>
+            </div>
+            <div class="date-time">${weatherPeriod.dateTime}</div>`;
+
+  containerDiv.appendChild(newWeatherEntryDiv);
+}
+
+function createDOMCurrent(currentConditions) {
+  createDOMWeatherEntry(currentConditions, currentContent);
+}
+
+function createDOMHourly(hourlyConditions) {
+  hourlyConditions.forEach((hour) => {
+    createDOMWeatherEntry(hour, hourlyContent);
+  });
+}
+
+function createDOMDaily(dailyConditions) {
+  dailyConditions.forEach((day) => {
+    createDOMWeatherEntry(day, weeklyContent);
+  });
 }
 
 // called exactly once - adds event listeners
